@@ -1,0 +1,34 @@
+/* Explorer's Properties dialog reads this block from morawm.exe. rc.exe
+ * compiles it; the numbers come from common/version.h. */
+#include <Windows.h>
+
+#include "common/version.h"
+
+1 ICON "mora.ico"
+
+1 VERSIONINFO
+FILEVERSION MORA_VERSION_MAJOR,MORA_VERSION_MINOR,0,0
+PRODUCTVERSION MORA_VERSION_MAJOR,MORA_VERSION_MINOR,0,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0" /* US English, Unicode */
+        BEGIN
+            VALUE "FileDescription", "MoraWM tiling window manager"
+            VALUE "FileVersion", MORA_VERSION_STRING
+            VALUE "InternalName", "morawm"
+            VALUE "OriginalFilename", "morawm.exe"
+            VALUE "ProductName", "MoraWM"
+            VALUE "ProductVersion", MORA_VERSION_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

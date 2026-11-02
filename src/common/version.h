@@ -1,0 +1,6 @@
+#pragma once
+
+#define MORA_VERSION_MAJOR 1
+#define MORA_VERSION_MINOR 0
+#define MORA_VERSION_STRING "1.0"
+#define MORA_VERSION_WIDE L"1.0"

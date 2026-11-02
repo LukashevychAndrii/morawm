@@ -1,0 +1,48 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches project version
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME.TrimStart('v')
+          if (-not (Select-String -Path meson.build -Pattern "version: '$([regex]::Escape($tag))'" -Quiet)) {
+            throw "Tag $env:GITHUB_REF_NAME does not match the project version in meson.build"
+          }
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install meson ninja
+      - run: meson setup build --vsenv -Dbuildtype=release
+      - run: meson compile -C build
+      - name: Package assets and checksums
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          New-Item -ItemType Directory out | Out-Null
+          # Stable name, so shortcuts and the startup folder survive upgrades and
+          # releases/latest/download/morawm.exe is a permanent link.
+          Copy-Item build/morawm.exe out/morawm.exe
+          Compress-Archive -Path build/morawm.exe, build/morawm.pdb -DestinationPath "out/morawm-$version.zip"
+          Compress-Archive -Path build/morawm.pdb -DestinationPath "out/morawm-$version-symbols.zip"
+          Push-Location out
+          # Hash everything before the sums file exists, so it never hashes itself.
+          $sums = Get-ChildItem -File | Sort-Object Name | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
+          }
+          # LF endings, so `sha256sum -c` works on Linux and Git Bash.
+          [IO.File]::WriteAllText("$PWD/SHA256SUMS.txt", (($sums -join "`n") + "`n"))
+          Pop-Location
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
